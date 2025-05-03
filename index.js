@@ -9,7 +9,7 @@ const app = express();
 
 // CORS-Konfiguration
 const allowedOrigins = [
-  'https://hexel-tech.de',
+  'https://hexel-tech.de/contact',
   'https://hexel-api.onrender.com',
   'http://localhost:3001'
 ];
