@@ -67,13 +67,15 @@ app.post('/api/contact', contactLimiter, validateContactRequest, async (req, res
 
   // Mail Transporter konfigurieren (sicherere Version)
   const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.ionos.de',
-    port: parseInt(process.env.EMAIL_PORT || '465'),
-    secure: true,
+    host: 'smtp.ionos.de',
+    port: 587,
+    secure: false, // false for STARTTLS
+    requireTLS: true,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
+      user: 'info@hexel-tech.de',
+      pass: 'Hexel020425$'
+    }
+  ,
     tls: {
       minVersion: 'TLSv1.2', // Sicherere TLS-Version
       ciphers: 'HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA',
