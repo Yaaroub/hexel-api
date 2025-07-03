@@ -1,31 +1,29 @@
 // middleware.js
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
-const allowedOrigins = ['https://hexel-tech.de']; // Produktionsdomain
+export function middleware(request) {
+  const origin = request.headers.get('origin')
+  const allowedOrigin = 'https://hexel-tech.de'
 
-export function middleware(req) {
-  const origin = req.headers.get('origin');
-  const isPreflight = req.method === 'OPTIONS';
-
-  if (origin && allowedOrigins.includes(origin)) {
-    const headers = {
-      'Access-Control-Allow-Origin': origin,
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
-
-    if (isPreflight) {
-      return new NextResponse(null, { status: 204, headers });
-    }
-
-    const res = NextResponse.next();
-    Object.entries(headers).forEach(([k, v]) => res.headers.set(k, v));
-    return res;
+  // Nur auf CORS reagieren, wenn die Origin passt
+  if (origin === allowedOrigin && request.method === 'OPTIONS') {
+    const response = new NextResponse(null, { status: 204 })
+    response.headers.set('Access-Control-Allow-Origin', origin)
+    response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+    response.headers.set('Access-Control-Max-Age', '86400')
+    return response
   }
 
-  return NextResponse.next();
+  // Für andere Anfragen: CORS Header hinzufügen
+  const response = NextResponse.next()
+  if (origin === allowedOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', origin)
+  }
+
+  return response
 }
 
 export const config = {
-  matcher: '/api/contact/:path*',
-};
+  matcher: '/api/:path*',
+}
