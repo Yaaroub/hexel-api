@@ -1,9 +1,10 @@
-import HomePage from "./homepage/page";
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
+
 export default function Home() {
-  return (
-    <>
-    <HomePage/>
-    
-    </>
-  );
+  const router = useRouter();
+  useEffect(() => {
+    router.replace('hexel-tech.de');
+  }, [router]);
+  return null;
 }

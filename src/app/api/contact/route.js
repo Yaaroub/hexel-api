@@ -1,58 +1,49 @@
-// app/api/contact/route.js
 import nodemailer from 'nodemailer';
 
-export async function POST(req) {
+export default async function handler(req, res) {
+  // CORS erlauben (für IONOS-Frontend)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end(); // Preflight
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: `Method ${req.method} not allowed` });
+  }
+
+  const { name, email, message } = req.body;
+
+  if (
+    !name || name.length < 2 ||
+    !email || !email.match(/\S+@\S+\.\S+/) ||
+    !message || message.length < 10
+  ) {
+    return res.status(400).json({ message: 'Ungültige Eingaben' });
+  }
+
+  const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
   try {
-    const { name, email, message } = await req.json();
-
-    // Debug-Logging der Umgebungsvariablen (nur in Entwicklung)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Mailer-ENV:', {
-        user: process.env.EMAIL_USER,
-        to: process.env.EMAIL_TO,
-      });
-    }
-
-    // Gmail Transporter konfigurieren
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, 
-      },
-    });
-
-    const mailOptions = {
-      from: `"Website-Kontakt" <${process.env.EMAIL_USER}>`,
+    await transporter.sendMail({
+      from: `"Kontaktformular" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_TO,
-      replyTo: email,
       subject: `Neue Nachricht von ${name}`,
-      text: `Name: ${name}\nE-Mail: ${email}\n\nNachricht:\n${message}`,
-      html: `
-        <h2>Neue Kontaktanfrage</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>E-Mail:</strong> ${email}</p>
-        <p><strong>Nachricht:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
-      `
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    return new Response(JSON.stringify({
-      message: 'Nachricht erfolgreich gesendet! Wir melden uns bald.'
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      text: `Name: ${name}\nEmail: ${email}\n\n${message}`,
+      replyTo: email,
     });
 
+    return res.status(200).json({ message: 'Nachricht erfolgreich gesendet.' });
   } catch (error) {
-    console.error('E-Mail-Versandfehler:', error);
-    return new Response(JSON.stringify({
-      message: `Fehler beim Senden: ${error.message}`
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    console.error('Mailer-Fehler:', error);
+    return res.status(500).json({ message: 'Fehler beim Senden der Nachricht.' });
   }
 }
