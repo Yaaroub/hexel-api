@@ -1,29 +1,28 @@
 import nodemailer from 'nodemailer';
 
-export default async function handler(req, res) {
-  // CORS erlauben (für IONOS-Frontend)
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end(); // Preflight
-  }
+export async function POST(req) {
+  const { name, email, message } = await req.json();
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: `Method ${req.method} not allowed` });
-  }
-
-  const { name, email, message } = req.body;
-
+  // Validierung
   if (
     !name || name.length < 2 ||
     !email || !email.match(/\S+@\S+\.\S+/) ||
     !message || message.length < 10
   ) {
-    return res.status(400).json({ message: 'Ungültige Eingaben' });
+    return new Response(
+      JSON.stringify({ message: 'Ungültige Eingaben.' }),
+      { status: 400, headers: corsHeaders }
+    );
   }
 
+  // Transporter erstellen
   const transporter = nodemailer.createTransport({
     service: 'Gmail',
     auth: {
@@ -34,16 +33,29 @@ export default async function handler(req, res) {
 
   try {
     await transporter.sendMail({
-      from: `"Kontaktformular" <${process.env.EMAIL_USER}>`,
+      from: `"HEXEL Kontaktformular" <${process.env.EMAIL_USER}>`,
       to: process.env.EMAIL_TO,
       subject: `Neue Nachricht von ${name}`,
-      text: `Name: ${name}\nEmail: ${email}\n\n${message}`,
+      text: `Name: ${name}\nE-Mail: ${email}\n\n${message}`,
       replyTo: email,
     });
 
-    return res.status(200).json({ message: 'Nachricht erfolgreich gesendet.' });
-  } catch (error) {
-    console.error('Mailer-Fehler:', error);
-    return res.status(500).json({ message: 'Fehler beim Senden der Nachricht.' });
+    return new Response(
+      JSON.stringify({ message: 'Nachricht erfolgreich gesendet.' }),
+      { status: 200, headers: corsHeaders }
+    );
+  } catch (err) {
+    console.error('Mailer-Fehler:', err);
+    return new Response(
+      JSON.stringify({ message: 'Fehler beim Senden der Nachricht.' }),
+      { status: 500, headers: corsHeaders }
+    );
   }
 }
+
+// CORS-Header erlauben z. B. IONOS oder alles
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // Oder z. B. 'https://hexel-tech.de'
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
