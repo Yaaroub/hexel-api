@@ -55,7 +55,7 @@ export async function POST(req) {
 
 // CORS-Header erlauben z. B. IONOS oder alles
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Oder z. B. 'https://hexel-tech.de'
+  'Access-Control-Allow-Origin': 'https://hexel-tech.de', // Oder z. B. 'https://hexel-tech.de'
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
