@@ -1,10 +1,6 @@
-import CookieBanner from "./components/CookieBanner";
-import GoogleTagManager from "./components/GoogleTagManager";
-import Head from "next/head";
+
 import "./globals.css";
-import Navigation from "./components/ui/Navigation";
-import Footer from "./components/ui/Footer";
-import Chat from "./components/Chat";
+
 export const metadata = {
   title: "HEXEL tech | Software & Design Lösungen",
   description: "Individuelle Softwareentwicklung, Webdesign und App-Entwicklung aus Deutschland - maßgeschneiderte digitale Lösungen für Ihr Business",
@@ -75,8 +71,6 @@ export default function RootLayout({ children }) {
         <main className="min-h-[calc(100vh-320px)] pt-14">
           {children}
         </main>
-        <Footer />
-        <CookieBanner />
       </body>
     </html>
   );
