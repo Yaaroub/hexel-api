@@ -1,11 +1,9 @@
-// middleware.js
 import { NextResponse } from 'next/server'
 
 export function middleware(request) {
   const origin = request.headers.get('origin')
   const allowedOrigin = 'https://hexel-tech.de'
 
-  // Nur auf CORS reagieren, wenn die Origin passt
   if (origin === allowedOrigin && request.method === 'OPTIONS') {
     const response = new NextResponse(null, { status: 204 })
     response.headers.set('Access-Control-Allow-Origin', origin)
@@ -15,7 +13,6 @@ export function middleware(request) {
     return response
   }
 
-  // Für andere Anfragen: CORS Header hinzufügen
   const response = NextResponse.next()
   if (origin === allowedOrigin) {
     response.headers.set('Access-Control-Allow-Origin', origin)
