@@ -12,8 +12,9 @@ export async function GET() { return NextResponse.json({ ok: true }, { headers: 
 export async function POST(req) {
   try {
     const { message = "ping", history = [], system } = await req.json().catch(()=>({}));
-    const HF_API_KEY = process.env.HF_API_KEY || "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";
+    const HF_API_KEY = process.env.HF_API_KEY ;
     const HF_MODEL   = process.env.HF_MODEL || "meta-llama/Meta-Llama-3.1-8B-Instruct";
+console.log(HF_API_KEY);
 
     // 1) Env-Diagnose (ohne Secrets zu leaken)
     if (!HF_API_KEY) {
