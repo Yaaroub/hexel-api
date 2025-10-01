@@ -1,24 +1,19 @@
+// app/api/chat/route.js
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-
-// --- CORS Helpers ---
-function corsHeaders() {
-  const origin = process.env.ALLOWED_ORIGIN || "*";
-  return {
-    "Access-Control-Allow-Origin": origin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-    "Access-Control-Allow-Headers": "Content-Type",
-  };
-}
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "https://hexel-tech.de", // ggf. auf * setzen zum Testen
+  "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Max-Age": "86400",
+};
 
 export async function OPTIONS() {
-  return new Response(null, { status: 204, headers: corsHeaders() });
+  return new Response(null, { status: 204, headers: corsHeaders });
 }
 
 export async function GET() {
-  return NextResponse.json({ ok: true, hint: "POST { message, history? }" }, { headers: corsHeaders() });
+  return NextResponse.json({ ok: true, hint: "POST { message, history? }" }, { headers: corsHeaders });
 }
 
 // --- Llama 3.1 Chat-Template ---
@@ -38,13 +33,13 @@ export async function POST(req) {
   try {
     const { message, history = [], system } = await req.json();
     if (!message || typeof message !== "string") {
-      return NextResponse.json({ error: "message fehlt oder ist ungültig" }, { status: 400, headers: corsHeaders() });
+      return NextResponse.json({ error: "message fehlt oder ist ungültig" }, { status: 400, headers: corsHeaders });
     }
 
     const HF_API_KEY = process.env.HF_API_KEY;
     const HF_MODEL   = process.env.HF_MODEL || "meta-llama/Meta-Llama-3.1-8B-Instruct";
     if (!HF_API_KEY) {
-      return NextResponse.json({ error: "HF_API_KEY fehlt (in Vercel setzen)" }, { status: 500, headers: corsHeaders() });
+      return NextResponse.json({ error: "HF_API_KEY fehlt (in Vercel setzen)" }, { status: 500, headers: corsHeaders });
     }
 
     const prompt = buildLlamaPrompt({ system, history, message });
@@ -71,7 +66,7 @@ export async function POST(req) {
     if (!r.ok) {
       let parsed; try { parsed = JSON.parse(raw); } catch {}
       const msg = parsed?.error || raw || "HF-Fehler ohne Nachricht";
-      return NextResponse.json({ error: msg, status: r.status, provider: "hf" }, { status: 502, headers: corsHeaders() });
+      return NextResponse.json({ error: msg, status: r.status, provider: "hf" }, { status: 502, headers: corsHeaders });
     }
 
     let reply = "";
@@ -81,13 +76,13 @@ export async function POST(req) {
     } catch { reply = raw; }
     reply = String(reply).trim();
 
-    // Echo-Schere
+    // Echo-Schutz
     const u = message.trim();
     if (reply.toLowerCase().startsWith(u.toLowerCase())) reply = reply.slice(u.length).trim();
     reply = reply.replace(/^assistant:\s*/i, "").trim() || "…";
 
-    return NextResponse.json({ reply, model: HF_MODEL }, { headers: corsHeaders() });
+    return NextResponse.json({ reply, model: HF_MODEL }, { headers: corsHeaders });
   } catch (e) {
-    return NextResponse.json({ error: "Serverfehler", details: String(e?.message || e) }, { status: 500, headers: corsHeaders() });
+    return NextResponse.json({ error: "Serverfehler", details: String(e?.message || e) }, { status: 500, headers: corsHeaders });
   }
 }
