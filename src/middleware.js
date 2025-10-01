@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 
 const ALLOWLIST = new Set([
   "https://hexel-tech.de",
-  "https://www.hexel-tech.de",   // falls www genutzt wird
-  "http://localhost:3000",       // lokal testen
-  "https://hexel-node1.vercel.app", // Preview/Vercel
+  "https://www.hexel-tech.de",
+  "http://localhost:3000",
+  "https://hexel-node1.vercel.app",
 ]);
 
 export function middleware(request) {
@@ -29,12 +29,9 @@ export function middleware(request) {
   const res = NextResponse.next();
   if (isAllowed) {
     res.headers.set("Access-Control-Allow-Origin", origin);
-    // res.headers.set("Access-Control-Allow-Credentials", "true"); // nur falls Cookies nötig
   }
   res.headers.set("Vary", "Origin");
   return res;
 }
 
-export const config = {
-  matcher: "/api/:path*",
-};
+export const config = { matcher: "/api/:path*" };
