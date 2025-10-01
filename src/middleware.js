@@ -1,26 +1,40 @@
-import { NextResponse } from 'next/server'
+// middleware.js
+import { NextResponse } from "next/server";
+
+const ALLOWLIST = new Set([
+  "https://hexel-tech.de",
+  "https://www.hexel-tech.de",   // falls www genutzt wird
+  "http://localhost:3000",       // lokal testen
+  "https://hexel-node1.vercel.app", // Preview/Vercel
+]);
 
 export function middleware(request) {
-  const origin = request.headers.get('origin')
-  const allowedOrigin = 'https://hexel-tech.de'
+  const origin = request.headers.get("origin") || "";
+  const isAllowed = ALLOWLIST.has(origin);
 
-  if (origin === allowedOrigin && request.method === 'OPTIONS') {
-    const response = new NextResponse(null, { status: 204 })
-    response.headers.set('Access-Control-Allow-Origin', origin)
-    response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
-    response.headers.set('Access-Control-Max-Age', '86400')
-    return response
+  // Preflight
+  if (request.method === "OPTIONS") {
+    const res = new NextResponse(null, { status: 204 });
+    if (isAllowed) {
+      res.headers.set("Access-Control-Allow-Origin", origin);
+      res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      res.headers.set("Access-Control-Max-Age", "86400");
+    }
+    res.headers.set("Vary", "Origin");
+    return res;
   }
 
-  const response = NextResponse.next()
-  if (origin === allowedOrigin) {
-    response.headers.set('Access-Control-Allow-Origin', origin)
+  // Normale Requests
+  const res = NextResponse.next();
+  if (isAllowed) {
+    res.headers.set("Access-Control-Allow-Origin", origin);
+    // res.headers.set("Access-Control-Allow-Credentials", "true"); // nur falls Cookies nötig
   }
-
-  return response
+  res.headers.set("Vary", "Origin");
+  return res;
 }
 
 export const config = {
-  matcher: '/api/:path*',
-}
+  matcher: "/api/:path*",
+};
